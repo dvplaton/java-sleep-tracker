@@ -95,7 +95,7 @@ class SleepTrackerAppTest {
                 session("2025-10-02 22:00", "2025-10-03 08:00")   // 600
         );
         SleepAnalysisResult result = new AvgDurationFunction().apply(sessions);
-        assertEquals("540,0", result.getValue());
+        assertEquals("540.0", result.getValue());
     }
 
     @Test
@@ -104,7 +104,7 @@ class SleepTrackerAppTest {
                 session("2025-10-01 23:00", "2025-10-02 07:30")  // 510
         );
         SleepAnalysisResult result = new AvgDurationFunction().apply(sessions);
-        assertEquals("510,0", result.getValue());
+        assertEquals("510.0", result.getValue());
     }
 
     // BadQualityCountFunction
