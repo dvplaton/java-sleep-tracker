@@ -41,26 +41,12 @@ public class SleeplessNightsFunction implements Function<List<SleepingSession>, 
 
         // Собираем все ночи (даты), покрытые хотя бы одной сессией
         Set<LocalDate> coveredNights = sessions.stream()
-                .flatMap(s -> coveredNightDates(s).stream())
+                .flatMap(s -> NightUtils.coveredNightDates(s).stream())
                 .filter(d -> !d.isBefore(firstNight) && !d.isAfter(lastNight))
                 .collect(Collectors.toSet());
 
         long sleeplessCount = totalNights - coveredNights.size();
 
         return new SleepAnalysisResult("Количество бессонных ночей", String.valueOf(sleeplessCount));
-    }
-
-    private Set<LocalDate> coveredNightDates(SleepingSession session) {
-        LocalDateTime start = session.getFallAsleep();
-        LocalDateTime end = session.getWakeUp();
-
-        LocalDate from = start.toLocalDate();
-        LocalDate to = end.toLocalDate().plusDays(1);
-
-        return from.datesUntil(to).filter(d -> {
-            LocalDateTime nightStart = d.atStartOfDay();
-            LocalDateTime nightEnd = d.atTime(6, 0);
-            return start.isBefore(nightEnd) && end.isAfter(nightStart);
-        }).collect(Collectors.toSet());
     }
 }

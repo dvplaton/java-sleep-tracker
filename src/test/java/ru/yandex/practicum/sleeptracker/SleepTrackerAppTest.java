@@ -2,9 +2,11 @@ package ru.yandex.practicum.sleeptracker;
 
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -225,9 +227,85 @@ class SleepTrackerAppTest {
     }
 
     @Test
+    void chronoType_morningSleep_notNightSession() {
+        List<SleepingSession> sessions = List.of(
+                session("2025-10-01 05:30", "2025-10-01 10:00"),  // утренний
+                session("2025-10-01 23:30", "2025-10-02 09:30")   // сова
+        );
+        SleepAnalysisResult result = new ChronoTypeFunction().apply(sessions);
+        assertEquals("Сова", result.getValue());
+    }
+
+    @Test
+    void chronoType_onlyMorningSessions_returnsPigeon() {
+        List<SleepingSession> sessions = List.of(
+                session("2025-10-01 05:30", "2025-10-01 10:00"),
+                session("2025-10-02 04:00", "2025-10-02 08:00")
+        );
+        SleepAnalysisResult result = new ChronoTypeFunction().apply(sessions);
+        assertEquals("Голубь", result.getValue());
+    }
+
+    @Test
+    void chronoType_eveningOnlySession_notNight() {
+        List<SleepingSession> sessions = List.of(
+                session("2025-10-01 19:00", "2025-10-01 22:00")  // вечерний
+        );
+        SleepAnalysisResult result = new ChronoTypeFunction().apply(sessions);
+        assertEquals("Голубь", result.getValue());
+    }
+
+    @Test
     void chronoType_empty_returnsPigeon() {
         SleepAnalysisResult result = new ChronoTypeFunction().apply(Collections.emptyList());
         assertEquals("Голубь", result.getValue());
+    }
+
+    // NightUtils
+
+    @Test
+    void nightUtils_eveningSleepCrossingMidnight_isNight() {
+        SleepingSession s = session("2025-10-01 23:30", "2025-10-02 09:30");
+        assertTrue(NightUtils.isNightSession(s));
+    }
+
+    @Test
+    void nightUtils_morningSleep_notNight() {
+        SleepingSession s = session("2025-10-01 05:30", "2025-10-01 10:00");
+        assertFalse(NightUtils.isNightSession(s));
+    }
+
+    @Test
+    void nightUtils_daytimeSleep_notNight() {
+        SleepingSession s = session("2025-10-01 14:30", "2025-10-01 15:20");
+        assertFalse(NightUtils.isNightSession(s));
+    }
+
+    @Test
+    void nightUtils_eveningWithoutMidnight_notNight() {
+        SleepingSession s = session("2025-10-01 19:00", "2025-10-01 22:00");
+        assertFalse(NightUtils.isNightSession(s));
+    }
+
+    @Test
+    void nightUtils_coveredNightDates_crossesMidnight() {
+        SleepingSession s = session("2025-10-01 23:00", "2025-10-02 07:00");
+        Set<LocalDate> nights = NightUtils.coveredNightDates(s);
+        assertTrue(nights.contains(LocalDate.of(2025, 10, 2)));
+    }
+
+    @Test
+    void nightUtils_coveredNightDates_earlyMorning() {
+        SleepingSession s = session("2025-10-02 02:00", "2025-10-02 05:00");
+        Set<LocalDate> nights = NightUtils.coveredNightDates(s);
+        assertTrue(nights.contains(LocalDate.of(2025, 10, 2)));
+    }
+
+    @Test
+    void nightUtils_coveredNightDates_daytimeOnly() {
+        SleepingSession s = session("2025-10-01 14:30", "2025-10-01 15:20");
+        Set<LocalDate> nights = NightUtils.coveredNightDates(s);
+        assertTrue(nights.isEmpty());
     }
 
     // Тест парсинга файла

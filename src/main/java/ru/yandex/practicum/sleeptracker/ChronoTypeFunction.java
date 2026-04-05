@@ -11,7 +11,7 @@ public class ChronoTypeFunction implements Function<List<SleepingSession>, Sleep
     @Override
     public SleepAnalysisResult apply(List<SleepingSession> sessions) {
 
-        List<SleepingSession> nightSessions = sessions.stream().filter(this::isNightSession).toList();
+        List<SleepingSession> nightSessions = sessions.stream().filter(NightUtils::isNightSession).toList();
 
         if (nightSessions.isEmpty()) {
             return new SleepAnalysisResult("Хронотип пользователя", ChronoType.PIGEON.getDisplayName());
@@ -35,19 +35,6 @@ public class ChronoTypeFunction implements Function<List<SleepingSession>, Sleep
         }
 
         return new SleepAnalysisResult("Хронотип пользователя", result.getDisplayName());
-    }
-
-    private boolean isNightSession(SleepingSession session) {
-        LocalTime startTime = session.getFallAsleep().toLocalTime();
-        LocalTime endTime = session.getWakeUp().toLocalTime();
-        boolean crossesMidnight = session.getFallAsleep().toLocalDate().isBefore(session.getWakeUp().toLocalDate());
-
-        // Если сессия пересекает полночь — ночная
-        if (crossesMidnight) {
-            return true;
-        }
-        // Если в один день: ночная, если начало до 6:00
-        return startTime.isBefore(LocalTime.of(6, 0));
     }
 
     private ChronoType classifyNight(SleepingSession session) {
